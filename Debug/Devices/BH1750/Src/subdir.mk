@@ -5,23 +5,23 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Devices/LCD_Display/Src/lcd.c 
+../Devices/BH1750/Src/bh1750.c 
 
 OBJS += \
-./Devices/LCD_Display/Src/lcd.o 
+./Devices/BH1750/Src/bh1750.o 
 
 C_DEPS += \
-./Devices/LCD_Display/Src/lcd.d 
+./Devices/BH1750/Src/bh1750.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-Devices/LCD_Display/Src/%.o Devices/LCD_Display/Src/%.su: ../Devices/LCD_Display/Src/%.c Devices/LCD_Display/Src/subdir.mk
+Devices/BH1750/Src/%.o Devices/BH1750/Src/%.su: ../Devices/BH1750/Src/%.c Devices/BH1750/Src/subdir.mk
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m7 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F767xx -c -I../Core/Inc -I../Devices/LCD_Display/Inc -I../Devices/BH1750/Inc -I../Drivers/STM32F7xx_HAL_Driver/Inc -I../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F7xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -o "$@"
 
-clean: clean-Devices-2f-LCD_Display-2f-Src
+clean: clean-Devices-2f-BH1750-2f-Src
 
-clean-Devices-2f-LCD_Display-2f-Src:
-	-$(RM) ./Devices/LCD_Display/Src/lcd.d ./Devices/LCD_Display/Src/lcd.o ./Devices/LCD_Display/Src/lcd.su
+clean-Devices-2f-BH1750-2f-Src:
+	-$(RM) ./Devices/BH1750/Src/bh1750.d ./Devices/BH1750/Src/bh1750.o ./Devices/BH1750/Src/bh1750.su
 
-.PHONY: clean-Devices-2f-LCD_Display-2f-Src
+.PHONY: clean-Devices-2f-BH1750-2f-Src
 
