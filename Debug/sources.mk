@@ -25,5 +25,6 @@ Core/Src \
 Core/Startup \
 Devices/BH1750/Src \
 Devices/LCD_Display/Src \
+Devices/PID_Controller/Src \
 Drivers/STM32F7xx_HAL_Driver/Src \
 

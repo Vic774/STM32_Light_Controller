@@ -40,9 +40,6 @@ typedef struct {
 #define BH1750_DATA_LSB     1
 
 
-/* Public variables */
-extern BH1750_HandleTypeDef hbh1750_1;
-
 /* Public function prototypes */
 
 /**

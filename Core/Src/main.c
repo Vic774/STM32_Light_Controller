@@ -19,19 +19,21 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "lcd.h"
-#include "bh1750.h"
+#include "lcd_config.h"
+#include "bh1750_config.h"
+#include "pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+PID_TypeDef Light_PID;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -46,18 +48,89 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint8_t Received[10];
 char str_buffer[16];
+float pulse = 0;
+int int_pulse;
+double Light, PID_Out, LightSetpoint;
+//int set_pulse;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void send_string(char* s)
+{
+	HAL_UART_Transmit_IT(&huart3, (uint8_t*)s, strlen(s));
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
 
+  if (htim->Instance == TIM3)
+  {
+
+
+
+
+  }
+
+  if (htim->Instance == TIM6)
+    {
+	  static int time_ms = 0;
+
+	  if(time_ms % 200 == 0)
+	  {
+		  Light = BH1750_ReadLux(&hbh1750_1);
+
+		  PID_Compute(&Light_PID);
+		  pulse = PID_Out;
+
+		  int_pulse = (int)pulse;
+		  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, int_pulse);
+	  }
+
+
+	  if(time_ms % 500 == 0)
+	  {
+		  Lcd_cursor(&lcd, 1,0);
+		  sprintf(str_buffer, "Measured: %5d", (int)Light);
+
+		  Lcd_string(&lcd, str_buffer);
+	  }
+
+
+	  time_ms += 100;
+	  if(time_ms == 1000)
+	  {
+		  time_ms = 0;
+	  }
+    }
+
+
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	uint8_t Data[6];
+	sprintf(Data, "%s",Received);
+	if(Data[0]=='L')
+	{
+		int value = atoi(&Data[1]);
+		if(value >= 0 && value <=9999)
+		{
+			char str_buffer[32];
+			LightSetpoint = value;
+			sprintf(str_buffer, "Light set point set at: %4d \r\n", value);
+			send_string(str_buffer);
+		}
+	}
+	HAL_UART_Receive_IT(&huart3, Received, 5);
+}
 /* USER CODE END 0 */
 
 /**
@@ -90,34 +163,37 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
+  MX_TIM4_Init();
   MX_I2C1_Init();
+  MX_TIM6_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim4);
+  HAL_TIM_Base_Start_IT(&htim6);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 
-  BH1750_Init(&hbh1750_1);
-
-  Lcd_PortType ports[] = {
-		  LCD_D4_GPIO_Port, LCD_D5_GPIO_Port, LCD_D6_GPIO_Port, LCD_D7_GPIO_Port
-  };
-
-  Lcd_PinType pins[] = {LCD_D4_Pin, LCD_D5_Pin, LCD_D6_Pin, LCD_D7_Pin};
-
-  Lcd_HandleTypeDef lcd = Lcd_create(ports, pins, LCD_RS_GPIO_Port, LCD_RS_Pin, LCD_E_GPIO_Port, LCD_E_Pin, LCD_4_BIT_MODE);
-
-
-  Lcd_cursor(&lcd, 0,0);
-  Lcd_string(&lcd, "SM ZZ");
-  Lcd_cursor(&lcd, 1,0);
-  Lcd_string(&lcd, "Measured: 99999");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  BH1750_Init(&hbh1750_1);
+  Lcd_init(&lcd);
+
+  Lcd_cursor(&lcd, 0,0);
+  Lcd_string(&lcd, "SM ZZ");
+
+  LightSetpoint = 200;
+  PID(&Light_PID, &Light, &PID_Out, &LightSetpoint, 3, 0.5, 0, _PID_P_ON_E, _PID_CD_DIRECT);
+
+  PID_SetMode(&Light_PID, _PID_MODE_AUTOMATIC);
+  PID_SetSampleTime(&Light_PID, 200);
+  PID_SetOutputLimits(&Light_PID, 0, 999);
+
+  HAL_UART_Receive_IT(&huart3, Received, 5);
+
   while (1)
   {
-	  Lcd_cursor(&lcd, 1,0);
-	  sprintf(str_buffer, "Measured: %5d", (int)BH1750_ReadLux(&hbh1750_1));
-	  Lcd_string(&lcd, str_buffer);
-	  HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

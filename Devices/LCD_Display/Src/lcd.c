@@ -6,6 +6,13 @@
   */
 
 #include "lcd.h"
+
+/************************************** Helper macros **************************************/
+
+#define DELAY(__HANDLE__, delay_ms)  DELAY_func((__HANDLE__),(float)delay_ms * 1000.0)
+
+/************************************** Private variables **************************************/
+
 const uint8_t ROW_16[] = {0x00, 0x40, 0x10, 0x50};
 const uint8_t ROW_20[] = {0x00, 0x40, 0x14, 0x54};
 /************************************** Static declarations **************************************/
@@ -23,7 +30,8 @@ static void lcd_write(Lcd_HandleTypeDef * lcd, uint8_t data, uint8_t len);
 Lcd_HandleTypeDef Lcd_create(
 		Lcd_PortType port[], Lcd_PinType pin[],
 		Lcd_PortType rs_port, Lcd_PinType rs_pin,
-		Lcd_PortType en_port, Lcd_PinType en_pin, Lcd_ModeTypeDef mode)
+		Lcd_PortType en_port, Lcd_PinType en_pin,
+		Lcd_ModeTypeDef mode, Lcd_TimerType timer)
 {
 	Lcd_HandleTypeDef lcd;
 
@@ -38,6 +46,8 @@ Lcd_HandleTypeDef Lcd_create(
 	lcd.data_pin = pin;
 	lcd.data_port = port;
 
+	lcd.timer = timer;
+
 	Lcd_init(&lcd);
 
 	return lcd;
@@ -48,19 +58,26 @@ Lcd_HandleTypeDef Lcd_create(
  */
 void Lcd_init(Lcd_HandleTypeDef * lcd)
 {
+	HAL_Delay(16);
+
 	if(lcd->mode == LCD_4_BIT_MODE)
 	{
 			lcd_write_command(lcd, 0x33);
+			HAL_Delay(5);
 			lcd_write_command(lcd, 0x32);
+			HAL_Delay(1);
 			lcd_write_command(lcd, FUNCTION_SET | OPT_N);				// 4-bit mode
+			HAL_Delay(1);
 	}
 	else
 		lcd_write_command(lcd, FUNCTION_SET | OPT_DL | OPT_N);
 
-
 	lcd_write_command(lcd, CLEAR_DISPLAY);						// Clear screen
-	lcd_write_command(lcd, DISPLAY_ON_OFF_CONTROL | OPT_D | OPT_C | OPT_B);		// Lcd-on, cursor-off, no-blink
+	HAL_Delay(2);
+	lcd_write_command(lcd, DISPLAY_ON_OFF_CONTROL | OPT_D);		// Lcd-on, cursor-off, no-blink
+	HAL_Delay(2);
 	lcd_write_command(lcd, ENTRY_MODE_SET | OPT_INC);			// Increment cursor
+	HAL_Delay(2);
 }
 
 /**
@@ -117,6 +134,16 @@ void Lcd_define_char(Lcd_HandleTypeDef * lcd, uint8_t code, uint8_t bitmap[]){
 
 /************************************** Static function definition **************************************/
 
+void DELAY_func(Lcd_HandleTypeDef* lcd, uint16_t delay_us)
+{
+  __HAL_TIM_SET_COUNTER(lcd->timer, 0);
+  HAL_TIM_Base_Start(lcd->timer);
+  while(__HAL_TIM_GET_COUNTER(lcd->timer) < delay_us);
+  HAL_TIM_Base_Stop(lcd->timer);
+}
+
+
+
 /**
  * Write a byte to the command register
  */
@@ -160,12 +187,12 @@ void lcd_write_data(Lcd_HandleTypeDef * lcd, uint8_t data)
  */
 void lcd_write(Lcd_HandleTypeDef * lcd, uint8_t data, uint8_t len)
 {
+	HAL_GPIO_WritePin(lcd->en_port, lcd->en_pin, 1);
 	for(uint8_t i = 0; i < len; i++)
 	{
 		HAL_GPIO_WritePin(lcd->data_port[i], lcd->data_pin[i], (data >> i) & 0x01);
 	}
 
-	HAL_GPIO_WritePin(lcd->en_port, lcd->en_pin, 1);
-	DELAY(1);
-	HAL_GPIO_WritePin(lcd->en_port, lcd->en_pin, 0); 		// Data receive on falling edge
+	HAL_GPIO_WritePin(lcd->en_port, lcd->en_pin, 0);
+	DELAY(lcd, 0.08);// Data receive on falling edge
 }

@@ -12,12 +12,6 @@
 #include "i2c.h"
 
 
-/* Private variables */
-
-BH1750_HandleTypeDef hbh1750_1 = {
-  .I2C = &hi2c1, .Address = BH1750_ADDRESS_L, .Timeout = 0xffff
-};
-
 /*
  * @brief BH1750 initialization procedure.
  * @note Sensor is set to continuous high resolution mode (1).

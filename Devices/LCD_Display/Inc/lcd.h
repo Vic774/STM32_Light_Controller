@@ -9,8 +9,9 @@
 #define LCD_H_
 
 #include "stm32f7xx_hal.h"
-#include "string.h"
-#include "stdio.h"
+
+#include <string.h>
+#include <stdio.h>
 
 #define LCD16xN			// For 16xN LCDs
 
@@ -44,9 +45,6 @@ extern const uint8_t ROW_20[];
 #define SET_DDRAM_ADDR 0x80				// Set DDRAM address
 
 
-/************************************** Helper macros **************************************/
-#define DELAY(X) HAL_Delay(X)
-
 
 /************************************** LCD defines **************************************/
 #define LCD_NIB 4
@@ -58,6 +56,7 @@ extern const uint8_t ROW_20[];
 /************************************** LCD typedefs **************************************/
 #define Lcd_PortType GPIO_TypeDef*
 #define Lcd_PinType uint16_t
+#define Lcd_TimerType TIM_HandleTypeDef*
 
 typedef enum {
 	LCD_4_BIT_MODE,
@@ -77,6 +76,8 @@ typedef struct {
 
 	Lcd_ModeTypeDef mode;
 
+	Lcd_TimerType timer;
+
 } Lcd_HandleTypeDef;
 
 
@@ -88,7 +89,8 @@ void Lcd_cursor(Lcd_HandleTypeDef * lcd, uint8_t row, uint8_t col);
 Lcd_HandleTypeDef Lcd_create(
 		Lcd_PortType port[], Lcd_PinType pin[],
 		Lcd_PortType rs_port, Lcd_PinType rs_pin,
-		Lcd_PortType en_port, Lcd_PinType en_pin, Lcd_ModeTypeDef mode);
+		Lcd_PortType en_port, Lcd_PinType en_pin,
+		Lcd_ModeTypeDef mode, Lcd_TimerType timer);
 void Lcd_define_char(Lcd_HandleTypeDef * lcd, uint8_t code, uint8_t bitmap[]);
 void Lcd_clear(Lcd_HandleTypeDef * lcd);
 
