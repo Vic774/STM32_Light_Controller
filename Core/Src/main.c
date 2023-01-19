@@ -29,6 +29,7 @@
 #include "lcd_config.h"
 #include "bh1750_config.h"
 #include "pid.h"
+#include "menu_config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +50,7 @@ PID_TypeDef Light_PID;
 
 /* USER CODE BEGIN PV */
 uint8_t Received[10];
-char str_buffer[16];
+//char str_buffer[16];
 float pulse = 0;
 int int_pulse;
 double Light, PID_Out, LightSetpoint;
@@ -96,10 +97,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 	  if(time_ms % 500 == 0)
 	  {
-		  Lcd_cursor(&lcd, 1,0);
-		  sprintf(str_buffer, "Measured: %5d", (int)Light);
+//		  Lcd_cursor(&lcd, 1,0);
+//		  sprintf(str_buffer, "Measured: %5d", (int)Light);
+//
+//		  Lcd_string(&lcd, str_buffer);
 
-		  Lcd_string(&lcd, str_buffer);
+		  MENU_ROUTINE(&hmenu);
 	  }
 
 
@@ -123,10 +126,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		int value = atoi(&Data[1]);
 		if(value >= 0 && value <=9999)
 		{
-			char str_buffer[32];
+			char send_buffer[32];
 			LightSetpoint = value;
-			sprintf(str_buffer, "Light set point set at: %4d \r\n", value);
-			send_string(str_buffer);
+			sprintf(send_buffer, "Light: %4d [lx]\r\n", value);
+			send_string(send_buffer);
 		}
 	}
 	HAL_UART_Receive_IT(&huart3, Received, 5);
@@ -180,8 +183,8 @@ int main(void)
   BH1750_Init(&hbh1750_1);
   Lcd_init(&lcd);
 
-  Lcd_cursor(&lcd, 0,0);
-  Lcd_string(&lcd, "SM ZZ");
+//  Lcd_cursor(&lcd, 0,0);
+//  Lcd_string(&lcd, "SM ZZ");
 
   LightSetpoint = 200;
   PID(&Light_PID, &Light, &PID_Out, &LightSetpoint, 3, 0.5, 0, _PID_P_ON_E, _PID_CD_DIRECT);
@@ -189,6 +192,8 @@ int main(void)
   PID_SetMode(&Light_PID, _PID_MODE_AUTOMATIC);
   PID_SetSampleTime(&Light_PID, 200);
   PID_SetOutputLimits(&Light_PID, 0, 999);
+
+  MENU_Init(&hmenu);
 
   HAL_UART_Receive_IT(&huart3, Received, 5);
 

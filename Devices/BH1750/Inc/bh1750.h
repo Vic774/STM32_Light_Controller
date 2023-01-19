@@ -19,6 +19,7 @@ typedef struct {
   BH1750_I2CType I2C;
   uint8_t Address;
   uint32_t Timeout;
+  float Readout;
 } BH1750_HandleTypeDef;
 
 /* Define */

@@ -14,6 +14,8 @@
 "./Devices/BH1750/Src/bh1750_config.o"
 "./Devices/LCD_Display/Src/lcd.o"
 "./Devices/LCD_Display/Src/lcd_config.o"
+"./Devices/Menu/Src/menu.o"
+"./Devices/Menu/Src/menu_config.o"
 "./Devices/PID_Controller/Src/pid.o"
 "./Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal.o"
 "./Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_cortex.o"

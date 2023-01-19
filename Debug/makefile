@@ -11,6 +11,7 @@ RM := rm -rf
 -include sources.mk
 -include Drivers/STM32F7xx_HAL_Driver/Src/subdir.mk
 -include Devices/PID_Controller/Src/subdir.mk
+-include Devices/Menu/Src/subdir.mk
 -include Devices/LCD_Display/Src/subdir.mk
 -include Devices/BH1750/Src/subdir.mk
 -include Core/Startup/subdir.mk
@@ -64,7 +65,7 @@ main-build: STM32_Light_Controller.elf secondary-outputs
 
 # Tool invocations
 STM32_Light_Controller.elf STM32_Light_Controller.map: $(OBJS) $(USER_OBJS) C:\Users\wikto\STM32CubeIDE\workspace_1.10.1\STM32_Light_Controller\STM32F767ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "STM32_Light_Controller.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\wikto\STM32CubeIDE\workspace_1.10.1\STM32_Light_Controller\STM32F767ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32_Light_Controller.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "STM32_Light_Controller.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\wikto\STM32CubeIDE\workspace_1.10.1\STM32_Light_Controller\STM32F767ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32_Light_Controller.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

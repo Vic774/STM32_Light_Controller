@@ -15,6 +15,8 @@
 
 #define LCD16xN			// For 16xN LCDs
 
+#define LCD_LINE_LEN 16
+#define LCD_LINE_BUF_LEN 17
 // For row start addresses
 extern const uint8_t ROW_16[];
 extern const uint8_t ROW_20[];

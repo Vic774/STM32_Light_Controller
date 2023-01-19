@@ -36,7 +36,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Inc/usart.h ../Core/Inc/usb_otg.h ../Core/Inc/gpio.h \
  ../Devices/LCD_Display/Inc/lcd_config.h ../Devices/LCD_Display/Inc/lcd.h \
  ../Devices/BH1750/Inc/bh1750_config.h ../Devices/BH1750/Inc/bh1750.h \
- ../Devices/PID_Controller/Inc/pid.h
+ ../Devices/PID_Controller/Inc/pid.h ../Devices/Menu/Inc/menu_config.h \
+ ../Devices/Menu/Inc/menu.h ../Devices/LCD_Display/Inc/lcd.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -82,3 +83,6 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Devices/BH1750/Inc/bh1750_config.h:
 ../Devices/BH1750/Inc/bh1750.h:
 ../Devices/PID_Controller/Inc/pid.h:
+../Devices/Menu/Inc/menu_config.h:
+../Devices/Menu/Inc/menu.h:
+../Devices/LCD_Display/Inc/lcd.h:

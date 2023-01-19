@@ -1,0 +1,2 @@
+../Devices/Menu/Src/menu.c:20:6:MENU_ITEM_ClearDisplayBuffer	16	static
+../Devices/Menu/Src/menu.c:29:6:MENU_ITEM_WriteDisplayBuffer	32	static
