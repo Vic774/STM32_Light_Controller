@@ -1,4 +1,6 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Devices/PID_Controller/Src/pid_config.o: \
+ ../Devices/PID_Controller/Src/pid_config.c \
+ ../Devices/PID_Controller/Inc/pid.h ../Core/Inc/main.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h \
  ../Core/Inc/stm32f7xx_hal_conf.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_rcc.h \
@@ -32,13 +34,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_ll_usb.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd_ex.h \
- ../Core/Inc/i2c.h ../Core/Inc/main.h ../Core/Inc/tim.h \
- ../Core/Inc/usart.h ../Core/Inc/usb_otg.h ../Core/Inc/gpio.h \
- ../Devices/LCD_Display/Inc/lcd_config.h ../Devices/LCD_Display/Inc/lcd.h \
- ../Devices/BH1750/Inc/bh1750_config.h ../Devices/BH1750/Inc/bh1750.h \
  ../Devices/PID_Controller/Inc/pid_config.h \
- ../Devices/PID_Controller/Inc/pid.h ../Devices/Menu/Inc/menu_config.h \
- ../Devices/Menu/Inc/menu.h ../Devices/LCD_Display/Inc/lcd.h
+ ../Devices/PID_Controller/Inc/pid.h ../Core/Inc/i2c.h ../Core/Inc/main.h
+../Devices/PID_Controller/Inc/pid.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -73,18 +71,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_ll_usb.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_pcd_ex.h:
-../Core/Inc/i2c.h:
-../Core/Inc/main.h:
-../Core/Inc/tim.h:
-../Core/Inc/usart.h:
-../Core/Inc/usb_otg.h:
-../Core/Inc/gpio.h:
-../Devices/LCD_Display/Inc/lcd_config.h:
-../Devices/LCD_Display/Inc/lcd.h:
-../Devices/BH1750/Inc/bh1750_config.h:
-../Devices/BH1750/Inc/bh1750.h:
 ../Devices/PID_Controller/Inc/pid_config.h:
 ../Devices/PID_Controller/Inc/pid.h:
-../Devices/Menu/Inc/menu_config.h:
-../Devices/Menu/Inc/menu.h:
-../Devices/LCD_Display/Inc/lcd.h:
+../Core/Inc/i2c.h:
+../Core/Inc/main.h:

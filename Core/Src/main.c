@@ -28,13 +28,13 @@
 /* USER CODE BEGIN Includes */
 #include "lcd_config.h"
 #include "bh1750_config.h"
-#include "pid.h"
+#include "pid_config.h"
 #include "menu_config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-PID_TypeDef Light_PID;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -54,7 +54,8 @@ uint8_t Received[10];
 float pulse = 0;
 int int_pulse;
 double Light, PID_Out, LightSetpoint;
-//int set_pulse;
+char send_buffer[150];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,6 +65,7 @@ void send_string(char* s)
 {
 	HAL_UART_Transmit_IT(&huart3, (uint8_t*)s, strlen(s));
 }
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -73,40 +75,39 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM3)
   {
+	  static int time_ms2 = 0;
 
+	  MENU_ROUTINE(&hmenu);
 
+	  if(time_ms2 % 1000 == 0)
+	  {
 
+		  sprintf(send_buffer, "*****\n\nLight set value: %4d [lx]\nCurrent value: %4d [lx]\nController Signal: %2.1f [%%]\n\n", (int)LightSetpoint, (int)Light, PID_Out/10);
+		  send_string(send_buffer);
+	  }
 
+	  time_ms2 += 500;
+	  if(time_ms2 == 3000)
+	  {
+		  time_ms2 = 0;
+	  }
   }
 
   if (htim->Instance == TIM6)
     {
 	  static int time_ms = 0;
 
-	  if(time_ms % 200 == 0)
+	  if(time_ms % 20 == 0)
 	  {
 		  Light = BH1750_ReadLux(&hbh1750_1);
 
 		  PID_Compute(&Light_PID);
-		  pulse = PID_Out;
 
-		  int_pulse = (int)pulse;
+		  int_pulse = (int)PID_Out;
 		  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, int_pulse);
 	  }
 
-
-	  if(time_ms % 500 == 0)
-	  {
-//		  Lcd_cursor(&lcd, 1,0);
-//		  sprintf(str_buffer, "Measured: %5d", (int)Light);
-//
-//		  Lcd_string(&lcd, str_buffer);
-
-		  MENU_ROUTINE(&hmenu);
-	  }
-
-
-	  time_ms += 100;
+	  time_ms += 20;
 	  if(time_ms == 1000)
 	  {
 		  time_ms = 0;
@@ -132,8 +133,32 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			send_string(send_buffer);
 		}
 	}
+	if(Data[0]=='M')
+	{
+		if(!strncmp( Data, "MNext", 5 ) && hmenu.Item->Next != NULL)
+		{
+			hmenu.Item = hmenu.Item->Next;
+			hmenu.ItemChanged = 1;
+		}
+		if(!strncmp( Data, "MPrev", 5 ) && hmenu.Item->Prev != NULL)
+		{
+			hmenu.Item = hmenu.Item->Prev;
+			hmenu.ItemChanged = 1;
+		}
+		if(!strncmp( Data, "MChld", 5 ) && hmenu.Item->Child != NULL)
+		{
+			hmenu.Item = hmenu.Item->Child;
+			hmenu.ItemChanged = 1;
+		}
+		if(!strncmp( Data, "MPrnt", 5 ) && hmenu.Item->Parent != NULL)
+		{
+			hmenu.Item = hmenu.Item->Parent;
+			hmenu.ItemChanged = 1;
+		}
+	}
 	HAL_UART_Receive_IT(&huart3, Received, 5);
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -170,31 +195,31 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM6_Init();
   MX_TIM14_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim4);
-  HAL_TIM_Base_Start_IT(&htim6);
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+
+  BH1750_Init(&hbh1750_1);
+  Lcd_init(&lcd);
+
+  LightSetpoint = 200;
+  PID(&Light_PID, &Light, &PID_Out, &LightSetpoint, 0.2, 10, 0, _PID_P_ON_E, _PID_CD_DIRECT);
+
+  PID_SetMode(&Light_PID, _PID_MODE_AUTOMATIC);
+  PID_SetSampleTime(&Light_PID, 20);
+  PID_SetOutputLimits(&Light_PID, 0, 999);
+
+  MENU_Init(&hmenu);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  BH1750_Init(&hbh1750_1);
-  Lcd_init(&lcd);
 
-//  Lcd_cursor(&lcd, 0,0);
-//  Lcd_string(&lcd, "SM ZZ");
-
-  LightSetpoint = 200;
-  PID(&Light_PID, &Light, &PID_Out, &LightSetpoint, 3, 0.5, 0, _PID_P_ON_E, _PID_CD_DIRECT);
-
-  PID_SetMode(&Light_PID, _PID_MODE_AUTOMATIC);
-  PID_SetSampleTime(&Light_PID, 200);
-  PID_SetOutputLimits(&Light_PID, 0, 999);
-
-  MENU_Init(&hmenu);
-
+  HAL_TIM_Base_Start_IT(&htim3);
+  HAL_TIM_Base_Start_IT(&htim4);
+  HAL_TIM_Base_Start_IT(&htim6);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   HAL_UART_Receive_IT(&huart3, Received, 5);
 
   while (1)

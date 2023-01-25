@@ -5,13 +5,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Devices/PID_Controller/Src/pid.c 
+../Devices/PID_Controller/Src/pid.c \
+../Devices/PID_Controller/Src/pid_config.c 
 
 OBJS += \
-./Devices/PID_Controller/Src/pid.o 
+./Devices/PID_Controller/Src/pid.o \
+./Devices/PID_Controller/Src/pid_config.o 
 
 C_DEPS += \
-./Devices/PID_Controller/Src/pid.d 
+./Devices/PID_Controller/Src/pid.d \
+./Devices/PID_Controller/Src/pid_config.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -21,7 +24,7 @@ Devices/PID_Controller/Src/%.o Devices/PID_Controller/Src/%.su: ../Devices/PID_C
 clean: clean-Devices-2f-PID_Controller-2f-Src
 
 clean-Devices-2f-PID_Controller-2f-Src:
-	-$(RM) ./Devices/PID_Controller/Src/pid.d ./Devices/PID_Controller/Src/pid.o ./Devices/PID_Controller/Src/pid.su
+	-$(RM) ./Devices/PID_Controller/Src/pid.d ./Devices/PID_Controller/Src/pid.o ./Devices/PID_Controller/Src/pid.su ./Devices/PID_Controller/Src/pid_config.d ./Devices/PID_Controller/Src/pid_config.o ./Devices/PID_Controller/Src/pid_config.su
 
 .PHONY: clean-Devices-2f-PID_Controller-2f-Src
 

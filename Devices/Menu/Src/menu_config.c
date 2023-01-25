@@ -15,14 +15,14 @@
 
 #include "lcd_config.h"
 #include "bh1750_config.h"
+#include "pid_config.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void menu_dout_routine(MenuItem_TypeDef* hmenuitem, GPIO_TypeDef* Port, uint16_t Pin, const char* name);
 void menu_folder_routine(MenuItem_TypeDef* hmenuitem, const char* name);
-//void menu_pwm_routine(MenuItem_TypeDef* hmenuitem, PWM_Handle_TypeDef* hpwm, const char* name);
-//void menu_uint_io_routine(MenuItem_TypeDef* hmenuitem, unsigned int value, unsigned int len, const char* name, const char* unit);
+
 void menu_float_io_routine(MenuItem_TypeDef* hmenuitem, float value, unsigned int len, const char* name, const char* unit);
-//void menu_dac_routine(MenuItem_TypeDef* hmenuitem, uint32_t channel, const char* name);
+
 
 /* Public variables ----------------------------------------------------------*/
 Menu_TypeDef hmenu = {
@@ -30,6 +30,7 @@ Menu_TypeDef hmenu = {
 };
 
 unsigned int ADC1_ConvResults_mV[16];
+_Bool last = 0;
 
 /* Private variables ---------------------------------------------------------*/
 MENU_ITEM_CONTRUCTOR(menu_DO_folder, {menu_folder_routine(hmenuitem, "Dgtl Outputs");} );
@@ -40,21 +41,29 @@ MENU_ITEM_CONTRUCTOR(menu_AI_folder, {menu_folder_routine(hmenuitem, "Anlg Input
 MENU_ITEM_CONTRUCTOR(menu_ld1, {menu_dout_routine(hmenuitem, LD1_GPIO_Port, LD1_Pin, "LD1");} );
 MENU_ITEM_CONTRUCTOR(menu_ld2, {menu_dout_routine(hmenuitem, LD2_GPIO_Port, LD2_Pin, "LD2");} );
 MENU_ITEM_CONTRUCTOR(menu_ld3, {menu_dout_routine(hmenuitem, LD3_GPIO_Port, LD3_Pin, "LD3");} );
+MENU_ITEM_CONTRUCTOR(menu_pwm_width, {menu_float_io_routine(hmenuitem, *Light_PID.MyOutput/10, 3, "PWM WDTH", "%%");} );
+MENU_ITEM_CONTRUCTOR(menu_light_ref, {menu_float_io_routine(hmenuitem, *Light_PID.MySetpoint, 4, "LGT ST PNT", "lx");} );
 
 MENU_ITEM_CONTRUCTOR(menu_bh1750, {menu_float_io_routine(hmenuitem, hbh1750_1.Readout, 6, "LIGHT", "lx");} );
+MENU_ITEM_CONTRUCTOR(menu_USR_Btn, {menu_dout_routine(hmenuitem, USER_Btn_GPIO_Port, USER_Btn_Pin, "USR BTN");} );
 
-#define MENU_FOLDERS_NBR 4
-#define MENU_1ST_DO 4
+#define MENU_FOLDERS_NBR 2
+#define MENU_1ST_DO 2
+#define MENU_DO_NBR 5
+
+#define MENU_1ST_DI 7
+#define MENU_DI_NBR 2
 #define MENU_MAIN_LEN (sizeof(MENU_MAIN_ARRAY)/sizeof(MENU_MAIN_ARRAY[0]))
 MenuItem_TypeDef* MENU_MAIN_ARRAY[] = { /* Main menu list */
   &menu_DO_folder,	 	/* Digital outputs folder */
   &menu_DI_folder,	 	/* Digital inputs folder */
-  &menu_AO_folder,	 	/* Analog outputs folder */
-  &menu_AI_folder,	 	/* Analog inputs folder */
   &menu_ld1,     		/* LED Green #1: on-board green LED (LD1) */
   &menu_ld2,     		/* LED Blue #1: on-board blue LED (LD2) */
   &menu_ld3,     		/* LED Red #1: on-board red LED (LD3) */
-  &menu_bh1750,   		/* Light sensor: BH1750 */
+  &menu_pwm_width,		/* LED White PWM duty cycle */
+  &menu_light_ref,		/* Set value of light on White LED */
+  &menu_bh1750,   		/* Light sensor readout: BH1750 */
+  &menu_USR_Btn			/* User button: on-board blue button */
 };
 
 /* Private function ----------------------------------------------------------*/
@@ -67,14 +76,15 @@ MenuItem_TypeDef* MENU_MAIN_ARRAY[] = { /* Main menu list */
  */
 void menu_dout_routine(MenuItem_TypeDef* hmenuitem, GPIO_TypeDef* Port, uint16_t Pin, const char* name)
 {
-//  if(hmenu.Item == hmenuitem) // If active component
-//  {
-//    ENC_GetCounter(&henc1);
-//    if(henc1.CounterInc)
-//    	HAL_GPIO_WritePin(Port, Pin, GPIO_PIN_SET);
-//    else if(henc1.CounterDec)
-//    	HAL_GPIO_WritePin(Port, Pin, GPIO_PIN_RESET);
-//  }
+
+  if(hmenu.Item == hmenuitem)
+  {
+	  if(!last == (_Bool)HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin) && last == 0)
+  	  {
+	  	  HAL_GPIO_TogglePin(Port, Pin);
+  	  }
+  	  last = (_Bool)HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin);
+  }
 
   char temp_str[LCD_LINE_BUF_LEN];
   hmenuitem->DisplayStrLen = snprintf(temp_str, LCD_LINE_LEN, "%s: %s", name, (_Bool)HAL_GPIO_ReadPin(Port, Pin) ? "ON" : "OFF");
@@ -95,26 +105,6 @@ void menu_folder_routine(MenuItem_TypeDef* hmenuitem, const char* name)
 	hmenuitem->SerialPortStrLen = 0;
 }
 
-///**
-// * @brief Common PWM menu routine.
-// * @param[in/out] hmenuitem : Menu item structure
-// * @param[in]     hpwm      : PWM output handler
-// * @param[in]     name      : Output display name
-// */
-//void menu_pwm_routine(MenuItem_TypeDef* hmenuitem, PWM_Handle_TypeDef* hpwm, const char* name)
-//{
-//  if(hmenu.Item == hmenuitem) // If active component
-//  {
-//    if(hmenu.ItemChanged) // Reload counter if item changed
-//      ENC_SetCounter(&henc1, PWM_ReadDuty(hpwm));
-//    PWM_WriteDuty(hpwm, ENC_GetCounter(&henc1));
-//  }
-//
-//  char temp_str[LCD_LINE_BUF_LEN];
-//  hmenuitem->DisplayStrLen = snprintf(temp_str, LCD_LINE_LEN, "%s: %3d%%", name, (int)PWM_ReadDuty(hpwm));
-//  MENU_ITEM_WriteDisplayBuffer(hmenuitem, temp_str); // Set display buffer
-//  hmenuitem->SerialPortStrLen = 0;
-//}
 
 //void menu_uint_io_routine(MenuItem_TypeDef* hmenuitem, unsigned int value, unsigned int len, const char* name, const char* unit)
 //{
@@ -127,7 +117,7 @@ void menu_folder_routine(MenuItem_TypeDef* hmenuitem, const char* name)
 void menu_float_io_routine(MenuItem_TypeDef* hmenuitem, float value, unsigned int len, const char* name, const char* unit)
 {
   char temp_str[LCD_LINE_BUF_LEN];
-  hmenuitem->DisplayStrLen = snprintf(temp_str, LCD_LINE_LEN, "%s: %*.2f%s", name, len, value, unit);
+  hmenuitem->DisplayStrLen = snprintf(temp_str, LCD_LINE_LEN, "%s: %*.1f%s", name, len, value, unit);
   MENU_ITEM_WriteDisplayBuffer(hmenuitem, temp_str); // Set display buffer
   hmenuitem->SerialPortStrLen = 0;
 }
@@ -171,9 +161,43 @@ void MENU_Init(Menu_TypeDef* hmenu)
   MENU_MAIN_ARRAY[0]->Prev = MENU_MAIN_ARRAY[MENU_FOLDERS_NBR-1]; //< Previous of first is last item
 
   MENU_MAIN_ARRAY[0]->Child = MENU_MAIN_ARRAY[MENU_1ST_DO];
-//  MENU_MAIN_ARRAY[1]->Child = MENU_MAIN_ARRAY[MENU_1ST_DO];
-//  MENU_MAIN_ARRAY[2]->Child = MENU_MAIN_ARRAY[MENU_1ST_DO];
-//  MENU_MAIN_ARRAY[3]->Child = MENU_MAIN_ARRAY[MENU_1ST_DO];
+
+  /* Digital outputs loop */
+    for(uint8_t i = MENU_1ST_DO; i < (uint8_t)(MENU_1ST_DO + MENU_DO_NBR-1); i++) //< Next item
+        {
+    	  MENU_MAIN_ARRAY[i]->Next = MENU_MAIN_ARRAY[i+1];
+        }
+
+    for(uint8_t i = MENU_1ST_DO + 1; i < (uint8_t)MENU_1ST_DO + MENU_DO_NBR; i++)     //< Previous item
+        {
+    	  MENU_MAIN_ARRAY[i]->Prev = MENU_MAIN_ARRAY[i-1];
+    	  MENU_MAIN_ARRAY[i]->Parent = MENU_MAIN_ARRAY[0];
+        }
+    MENU_MAIN_ARRAY[MENU_1ST_DO]->Parent = MENU_MAIN_ARRAY[0];
+
+    /* Cyclic list */
+    MENU_MAIN_ARRAY[MENU_1ST_DO + MENU_DO_NBR-1]->Next = MENU_MAIN_ARRAY[MENU_1ST_DO]; //< Next of last is first item
+    MENU_MAIN_ARRAY[MENU_1ST_DO]->Prev = MENU_MAIN_ARRAY[MENU_1ST_DO + MENU_DO_NBR-1]; //< Previous of first is last item
+
+
+    MENU_MAIN_ARRAY[1]->Child = MENU_MAIN_ARRAY[MENU_1ST_DI];
+    /* Digital Input loop */
+    for(uint8_t i = MENU_1ST_DI; i < (uint8_t)(MENU_1ST_DI + MENU_DI_NBR-1); i++) //< Next item
+    {
+        MENU_MAIN_ARRAY[i]->Next = MENU_MAIN_ARRAY[i+1];
+    }
+
+    for(uint8_t i = MENU_1ST_DI + 1; i < (uint8_t)MENU_1ST_DI + MENU_DI_NBR; i++)     //< Previous item
+    {
+    	MENU_MAIN_ARRAY[i]->Prev = MENU_MAIN_ARRAY[i-1];
+    	MENU_MAIN_ARRAY[i]->Parent = MENU_MAIN_ARRAY[1];
+    }
+    MENU_MAIN_ARRAY[MENU_1ST_DI]->Parent = MENU_MAIN_ARRAY[1];
+
+    /* Cyclic list */
+    MENU_MAIN_ARRAY[MENU_1ST_DI + MENU_DI_NBR-1]->Next = MENU_MAIN_ARRAY[MENU_1ST_DI]; //< Next of last is first item
+    MENU_MAIN_ARRAY[MENU_1ST_DI]->Prev = MENU_MAIN_ARRAY[MENU_1ST_DI + MENU_DI_NBR-1]; //< Previous of first is last item
+
 
   hmenu->Initialized = 1;
 
