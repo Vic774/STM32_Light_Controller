@@ -52,7 +52,7 @@
 uint8_t Received[10];
 //char str_buffer[16];
 float pulse = 0;
-int int_pulse;
+int int_pulse, int_Light, int_LightSetpoint;
 double Light, PID_Out, LightSetpoint;
 char send_buffer[150];
 
@@ -70,6 +70,35 @@ void send_string(char* s)
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_GPIO_EXTI_Callback ( uint16_t GPIO_Pin )
+{
+	if(GPIO_Pin == Back_Btn_Pin)
+	{
+		if(hmenu.Item->Parent != NULL)
+		{
+			hmenu.Item = hmenu.Item->Parent;
+			hmenu.ItemChanged = 1;
+		}
+	}
+	else if(GPIO_Pin == Up_Btn_Pin)
+	{
+		if(hmenu.Item->Next != NULL)
+		{
+			hmenu.Item = hmenu.Item->Next;
+			hmenu.ItemChanged = 1;
+		}
+	}
+	else if(GPIO_Pin == Next_Btn_Pin)
+	{
+		if(hmenu.Item->Child != NULL)
+		{
+			hmenu.Item = hmenu.Item->Child;
+			hmenu.ItemChanged = 1;
+		}
+	}
+}
+
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 
@@ -81,8 +110,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 	  if(time_ms2 % 1000 == 0)
 	  {
-
-		  sprintf(send_buffer, "*****\n\nLight set value: %4d [lx]\nCurrent value: %4d [lx]\nController Signal: %2.1f [%%]\n\n", (int)LightSetpoint, (int)Light, PID_Out/10);
+		  int_LightSetpoint = (int)LightSetpoint;
+		  sprintf(send_buffer, "*****\n\nLight set value: %4d [lx]\nCurrent value: %4d [lx]\nController Signal: %2.1f [%%]\n\n", int_LightSetpoint, int_Light, PID_Out/10);
 		  send_string(send_buffer);
 	  }
 
@@ -100,6 +129,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	  if(time_ms % 20 == 0)
 	  {
 		  Light = BH1750_ReadLux(&hbh1750_1);
+		  int_Light = (int)Light;
 
 		  PID_Compute(&Light_PID);
 
@@ -129,6 +159,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		{
 			char send_buffer[32];
 			LightSetpoint = value;
+
 			sprintf(send_buffer, "Light: %4d [lx]\r\n", value);
 			send_string(send_buffer);
 		}
