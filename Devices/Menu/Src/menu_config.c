@@ -22,7 +22,7 @@ void menu_dout_routine(MenuItem_TypeDef* hmenuitem, GPIO_TypeDef* Port, uint16_t
 void menu_folder_routine(MenuItem_TypeDef* hmenuitem, const char* name);
 
 void menu_float_io_routine(MenuItem_TypeDef* hmenuitem, float value, unsigned int len, const char* name, const char* unit);
-
+void menu_float_io_ref_light_routine(MenuItem_TypeDef* hmenuitem, float value, unsigned int len, const char* name, const char* unit);
 
 /* Public variables ----------------------------------------------------------*/
 Menu_TypeDef hmenu = {
@@ -42,7 +42,7 @@ MENU_ITEM_CONTRUCTOR(menu_ld1, {menu_dout_routine(hmenuitem, LD1_GPIO_Port, LD1_
 MENU_ITEM_CONTRUCTOR(menu_ld2, {menu_dout_routine(hmenuitem, LD2_GPIO_Port, LD2_Pin, "LD2");} );
 MENU_ITEM_CONTRUCTOR(menu_ld3, {menu_dout_routine(hmenuitem, LD3_GPIO_Port, LD3_Pin, "LD3");} );
 MENU_ITEM_CONTRUCTOR(menu_pwm_width, {menu_float_io_routine(hmenuitem, *Light_PID.MyOutput/10, 3, "PWM WDTH", "%");} );
-MENU_ITEM_CONTRUCTOR(menu_light_ref, {menu_float_io_routine(hmenuitem, *Light_PID.MySetpoint, 4, "LGT STPNT", "lx");} );
+MENU_ITEM_CONTRUCTOR(menu_light_ref, {menu_float_io_ref_light_routine(hmenuitem, *Light_PID.MySetpoint, 4, "LGT STPNT", "lx");} );
 
 MENU_ITEM_CONTRUCTOR(menu_bh1750, {menu_float_io_routine(hmenuitem, hbh1750_1.Readout, 6, "LIGHT", "lx");} );
 MENU_ITEM_CONTRUCTOR(menu_USR_Btn, {menu_dout_routine(hmenuitem, USER_Btn_GPIO_Port, USER_Btn_Pin, "USR BTN");} );
@@ -116,6 +116,30 @@ void menu_folder_routine(MenuItem_TypeDef* hmenuitem, const char* name)
 
 void menu_float_io_routine(MenuItem_TypeDef* hmenuitem, float value, unsigned int len, const char* name, const char* unit)
 {
+  char temp_str[LCD_LINE_BUF_LEN];
+  hmenuitem->DisplayStrLen = snprintf(temp_str, LCD_LINE_LEN, "%s: %*.1f%s", name, len, value, unit);
+  MENU_ITEM_WriteDisplayBuffer(hmenuitem, temp_str); // Set display buffer
+  hmenuitem->SerialPortStrLen = 0;
+}
+
+void menu_float_io_ref_light_routine(MenuItem_TypeDef* hmenuitem, float value, unsigned int len, const char* name, const char* unit)
+{
+
+  if(hmenu.Item == hmenuitem)
+  {
+	  if(!last == (_Bool)HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin) && last == 0)
+	  {
+		  if(*Light_PID.MySetpoint < 3000)
+		  {
+			  *Light_PID.MySetpoint += 100.0;
+		  }
+		  else
+		  {
+			  *Light_PID.MySetpoint = 0.0;
+		  }
+	  }
+	  last = (_Bool)HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin);
+  }
   char temp_str[LCD_LINE_BUF_LEN];
   hmenuitem->DisplayStrLen = snprintf(temp_str, LCD_LINE_LEN, "%s: %*.1f%s", name, len, value, unit);
   MENU_ITEM_WriteDisplayBuffer(hmenuitem, temp_str); // Set display buffer

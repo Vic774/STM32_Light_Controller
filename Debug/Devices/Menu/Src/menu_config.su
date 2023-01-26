@@ -12,5 +12,6 @@
 ../Devices/Menu/Src/menu_config.c:77:6:menu_dout_routine	64	static
 ../Devices/Menu/Src/menu_config.c:100:6:menu_folder_routine	40	static
 ../Devices/Menu/Src/menu_config.c:117:6:menu_float_io_routine	80	static
-../Devices/Menu/Src/menu_config.c:144:6:MENU_Init	24	static
-../Devices/Menu/Src/menu_config.c:215:6:MENU_ROUTINE	16	static
+../Devices/Menu/Src/menu_config.c:125:6:menu_float_io_ref_light_routine	88	static
+../Devices/Menu/Src/menu_config.c:168:6:MENU_Init	24	static
+../Devices/Menu/Src/menu_config.c:239:6:MENU_ROUTINE	16	static
